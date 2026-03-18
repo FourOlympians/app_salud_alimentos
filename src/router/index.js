@@ -1,6 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import BuscadorAlimentos from '../views/BuscadorAlimentos.vue'
 
+{
+  path: '/alimentos',
+  name: 'alimentos',
+  component: BuscadorAlimentos,
+}
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
