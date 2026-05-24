@@ -40,3 +40,8 @@ __screenshots__/
 
 logs/
 tests_output/
+
+
+.env
+*.env
+*.env*
