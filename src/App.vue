@@ -1,27 +1,54 @@
 <script setup>
+import { onMounted } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
+import { useAuth } from '@/composables/useAuth'
+import { useRouter } from 'vue-router'
+
+const { user, initAuth, logout } = useAuth()
+const router = useRouter()
+
+// Restaura la sesión al cargar la app (si el usuario ya había iniciado sesión antes)
+onMounted(() => {
+  initAuth()
+})
+
+async function handleLogout() {
+  await logout()
+  router.push({ name: 'login' })
+}
 </script>
 
 <template>
   <div class="app_container">
-
-      <header class="app-header">
-        <div class="header__brand">
-          <img alt="App logo" class="logo" src="@/assets/logo_fresa.png" height="100" />
-          <div>
-            <h1 class="app-title">FoodLight</h1>
-            <p class="app-subtitle">Recetas inteligentes para cada estilo de vida</p>
-          </div>
+    <header class="app-header">
+      <div class="header__brand">
+        <img alt="App logo" class="logo" src="@/assets/logo_fresa.png" height="100" />
+        <div>
+          <h1 class="app-title">FoodLight</h1>
+          <p class="app-subtitle">Recetas inteligentes para cada estilo de vida</p>
         </div>
-    
-        <nav class="app-nav">
-          <RouterLink class="link" to="/">Inicio</RouterLink>
+      </div>
+
+      <nav class="app-nav">
+        <RouterLink class="link" to="/">Inicio</RouterLink>
+
+        <!-- Muestra el buscador y logout solo si hay sesión activa -->
+        <template v-if="user">
+          <RouterLink class="link" to="/buscador">Buscador</RouterLink>
+          <span class="nav__user">{{ user.email }}</span>
+          <button class="btn-logout" @click="handleLogout">Salir</button>
+        </template>
+
+        <!-- Si no hay sesión, muestra login -->
+        <template v-else>
           <RouterLink class="link" to="/login">Iniciar sesión</RouterLink>
-          <RouterLink class="link" to="/about">Acerca</RouterLink>
-        </nav>
-      </header>
-    
-      <RouterView />
+        </template>
+
+        <RouterLink class="link" to="/about">Acerca</RouterLink>
+      </nav>
+    </header>
+
+    <RouterView />
   </div>
 </template>
 
@@ -38,9 +65,6 @@ import { RouterLink, RouterView } from 'vue-router'
   background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(14px);
 }
-
-
-
 
 .header__brand {
   flex-direction: row;
@@ -64,8 +88,9 @@ import { RouterLink, RouterView } from 'vue-router'
 
 .app-nav {
   display: flex;
-  gap: 3rem;
+  gap: 1rem;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: center;
 }
 
@@ -84,6 +109,32 @@ import { RouterLink, RouterView } from 'vue-router'
 
 .app-nav a:hover {
   background: rgba(97, 232, 225, 0.22);
+}
+
+.nav__user {
+  font-size: 0.82rem;
+  color: rgba(18, 31, 28, 0.5);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-logout {
+  border: 1.5px solid rgba(242, 87, 87, 0.4);
+  background: transparent;
+  color: rgba(200, 50, 50, 0.85);
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-logout:hover {
+  background: rgba(242, 87, 87, 0.1);
+  border-color: rgba(242, 87, 87, 0.7);
 }
 
 @media (min-width: 1024px) {

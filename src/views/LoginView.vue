@@ -1,168 +1,258 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuth } from '@/composables/useAuth'
 
 const router = useRouter()
-const email = ref('')
+const { login, loading, error } = useAuth()
+
+const email    = ref('')
 const password = ref('')
-const remember = ref(false)
-const error = ref('')
 
-const submit = () => {
-  error.value = ''
-
-  if (!email.value.trim() || !password.value.trim()) {
-    error.value = 'Por favor completa todos los campos para continuar.'
-    return
-  }
-
-  // Aquí iría la lógica de autenticación real.
-  // Por ahora, simulamos un inicio de sesión exitoso.
-
-  router.push({ name: 'landing' })
+async function submit() {
+  const ok = await login(email.value.trim(), password.value)
+  if (ok) router.push({ name: 'landing' })
 }
 </script>
 
 <template>
-  <main class="login">
-    <section class="login__card">
-      <header class="login__header">
-        <h1>Iniciar sesión</h1>
-        <p>
-          Accede con tu correo y contraseña para obtener recomendaciones de recetas y alimentos
-          personalizadas.
+  <div class="auth-shell">
+    <div class="auth-image">
+      <img src="@/assets/logologin.png" alt="FoodLight" />
+      <div class="auth-image__overlay">
+        <p class="auth-image__tagline">Salud y sabor<br>en cada bocado</p>
+      </div>
+    </div>
+
+    <div class="auth-panel">
+      <div class="auth-form-wrap">
+        <header class="auth-header">
+          <h1>Iniciar sesión</h1>
+          <p>Accede con tu cuenta para ver tus recomendaciones personalizadas.</p>
+        </header>
+
+        <form @submit.prevent="submit" autocomplete="off" class="auth-form">
+          <div class="field">
+            <label for="email">Correo electrónico</label>
+            <div class="field__input-wrap">
+              <span class="field__icon">✉</span>
+              <input
+                id="email"
+                type="email"
+                v-model="email"
+                placeholder="ejemplo@correo.com"
+                required
+                autocomplete="email"
+                :disabled="loading"
+              />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="password">Contraseña</label>
+            <div class="field__input-wrap">
+              <span class="field__icon">🔒</span>
+              <input
+                id="password"
+                type="password"
+                v-model="password"
+                placeholder="••••••••••"
+                required
+                autocomplete="current-password"
+                :disabled="loading"
+              />
+            </div>
+          </div>
+
+          <p v-if="error" class="auth-error">⚠ {{ error }}</p>
+
+          <button type="submit" class="btn-submit" :disabled="loading">
+            <span v-if="loading" class="spinner"></span>
+            {{ loading ? 'Entrando…' : 'INICIAR SESIÓN' }}
+          </button>
+        </form>
+
+        <p class="auth-switch">
+          ¿No tienes cuenta?
+          <router-link to="/register">Crear cuenta</router-link>
         </p>
-      </header>
-
-      <form class="login__form" @submit.prevent="submit" autocomplete="off">
-        <label>
-          <span>Correo electrónico</span>
-          <input
-            type="email"
-            v-model="email"
-            placeholder="ejemplo@correo.com"
-            required
-            autocomplete="email"
-          />
-        </label>
-
-        <label>
-          <span>Contraseña</span>
-          <input
-            type="password"
-            v-model="password"
-            placeholder="••••••••••" 
-            required
-            autocomplete="current-password"
-          />
-        </label>
-
-        <label class="login__remember">
-          <input type="checkbox" v-model="remember" />
-          <span>Recuérdame</span>
-        </label>
-
-        <p v-if="error" class="login__error">{{ error }}</p>
-
-        <button type="submit" class="btn btn--primary">Entrar</button>
-
-        <p class="login__helper">
-          ¿No tienes cuenta? <router-link to="/">Regresa al landing</router-link>
-        </p>
-      </form>
-    </section>
-  </main>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
-.login {
+.auth-shell {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 2rem 1rem;
-  background: linear-gradient(135deg, rgba(97, 232, 225, 0.25), rgba(242, 232, 99, 0.12));
 }
 
-.login__card {
-  width: min(480px, 100%);
+.auth-image {
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.auth-image__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(15,110,86,0.25) 0%, rgba(4,52,44,0.72) 100%);
+  display: flex;
+  align-items: flex-end;
   padding: 2.5rem;
-  border-radius: 1.5rem;
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 28px 45px rgba(0, 0, 0, 0.12);
 }
 
-.login__header {
-  margin-bottom: 1.75rem;
-}
-
-.login__header h1 {
-  margin: 0 0 0.5rem;
-  font-size: 2rem;
-  color: rgba(28, 36, 34, 0.9);
-}
-
-.login__header p {
+.auth-image__tagline {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
   margin: 0;
-  font-size: 0.95rem;
-  color: rgba(28, 36, 34, 0.7);
-  line-height: 1.6;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.4);
 }
 
-.login__form {
-  display: grid;
-  gap: 1.25rem;
-}
-
-.login__form label {
-  display: grid;
-  gap: 0.5rem;
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: rgba(28, 36, 34, 0.85);
-}
-
-.login__form input[type='email'],
-.login__form input[type='password'] {
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  border-radius: 0.85rem;
-  padding: 0.85rem 1rem;
-  font-size: 1rem;
-  outline: none;
-  transition: border 0.2s, box-shadow 0.2s;
-}
-
-.login__form input:focus {
-  border-color: var(--palette-neon-ice);
-  box-shadow: 0 0 0 3px rgba(97, 232, 225, 0.22);
-}
-
-.login__remember {
+.auth-panel {
+  background: #1a2620;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  font-size: 0.95rem;
-  color: rgba(28, 36, 34, 0.75);
+  justify-content: center;
+  padding: 3rem 2rem;
 }
 
-.login__error {
-  margin: 0;
-  padding: 0.75rem 1rem;
-  border-radius: 1rem;
-  background: rgba(242, 85, 87, 0.12);
-  color: rgba(242, 87, 87, 0.95);
-  font-size: 0.95rem;
+.auth-form-wrap {
+  width: 100%;
+  max-width: 380px;
 }
 
-.login__helper {
-  margin: 0;
+.auth-header { margin-bottom: 2rem; }
+
+.auth-header h1 {
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.auth-header p {
   font-size: 0.9rem;
-  color: rgba(28, 36, 34, 0.7);
+  color: rgba(255,255,255,0.55);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.auth-form { display: grid; gap: 1.1rem; }
+
+.field { display: grid; gap: 0.45rem; }
+
+.field label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.65);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.field__input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.field__icon {
+  position: absolute;
+  left: 0.9rem;
+  font-size: 0.95rem;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.field__input-wrap input {
+  width: 100%;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 0.78rem 0.9rem 0.78rem 2.6rem;
+  font-size: 0.95rem;
+  color: #fff;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.field__input-wrap input::placeholder { color: rgba(255,255,255,0.25); }
+
+.field__input-wrap input:focus {
+  border-color: #52b788;
+  background: rgba(82,183,136,0.08);
+}
+
+.field__input-wrap input:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.auth-error {
+  font-size: 0.88rem;
+  color: #f4a9a9;
+  background: rgba(242,87,87,0.12);
+  border: 1px solid rgba(242,87,87,0.25);
+  border-radius: 8px;
+  padding: 0.65rem 0.9rem;
+  margin: 0;
+}
+
+.btn-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.85rem;
+  border-radius: 8px;
+  background: #52b788;
+  color: #0d2118;
+  border: none;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.btn-submit:hover:not(:disabled) { background: #3da372; transform: translateY(-1px); }
+.btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.auth-switch {
+  margin-top: 1.75rem;
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.45);
   text-align: center;
 }
 
-.login__helper a {
-  color: var(--palette-neon-ice);
-  font-weight: 600;
+.auth-switch a { color: #52b788; font-weight: 600; text-decoration: none; transition: color 0.2s; }
+.auth-switch a:hover { color: #97c459; }
+
+@media (max-width: 700px) {
+  .auth-shell { grid-template-columns: 1fr; }
+  .auth-image { display: none; }
+  .auth-panel { padding: 2.5rem 1.5rem; min-height: 100vh; }
 }
 </style>
